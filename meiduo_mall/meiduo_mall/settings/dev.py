@@ -10,7 +10,7 @@ https://docs.djangoproject.com/en/1.11/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.11/ref/settings/
 """
-
+import datetime
 import os
 
 
@@ -30,7 +30,8 @@ SECRET_KEY = '$lzf367d%3qg-hk+nz^$hd^&t5^*(g_j_66exkc%(13@bjtmv*'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS =['127.0.0.1','localhost','www.meiduo.site','api.meiduo.site']
+
 
 # Application definition
 
@@ -48,11 +49,10 @@ INSTALLED_APPS = [
 
 ]
 #允许哪些域名访问Django
-ALLOWED_HOSTS =['127.0.0.1','localhost','www.meiduo.site','api.meiduo.site']
 
 #中间件
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',  #  最外层中间件
+    'corsheaders.middleware.CorsMiddleware',  #  最外层中间件(解决跨域)
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -147,6 +147,7 @@ CACHES = {
                 "LOCATION": "redis://127.0.0.1:6379/1",
                 "OPTIONS": {"CLIENT_CLASS": "django_redis.client.DefaultClient", }
                 },
+    # 存短信验证码
     "verify_codes": {"BACKEND": "django_redis.cache.RedisCache",
                 "LOCATION": "redis://127.0.0.1:6379/2",
                 "OPTIONS": {"CLIENT_CLASS": "django_redis.client.DefaultClient", }
@@ -202,6 +203,13 @@ LOGGING = {
 REST_FRAMEWORK = {
     # 异常处理
     'EXCEPTION_HANDLER': 'meiduo_mall.utils.exceptions.exception_handler',
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+    ),
+
+
 }
 
 # 告知Django认证系统使用我们自定义的模型类。
@@ -218,3 +226,9 @@ CORS_ORIGIN_WHITELIST = (
     'api.meiduo.site:8000'
 )
 CORS_ALLOW_CREDENTIALS = True  # 允许携带cookie
+
+
+
+JWT_AUTH = {
+    'JWT_EXPIRATION_DELTA': datetime.timedelta(days=1),
+}
