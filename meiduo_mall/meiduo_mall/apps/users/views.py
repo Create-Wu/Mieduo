@@ -12,14 +12,14 @@ from users.serializers import CreateUserSerializer
 
 class UserView(CreateAPIView):
     """
-      用户注册
+      用户注册，调用序列化器
     """
     serializer_class = CreateUserSerializer
 
 
 
 
-# 查看用户名是否存在
+# 查看用户名和账号是否存在
 class UesrnameCountView(APIView):
     """
     用户名数量
@@ -54,7 +54,7 @@ class Moebile(APIView):
         :param mobile: 手机号
         :return:
         """
-
+        #  count: 计数
         count = User.objects.filter(mobile=mobile).count()
 
         data = {

@@ -17,11 +17,17 @@ from django.conf.urls import url, include
 from django.contrib import admin
 import verifications.urls
 import users.urls
+import oauth.urls
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
 
+    # 验证码路由
     url(r'^', include(verifications.urls)),
 
-    url(r'^',include(users.urls))
+    # 用户路由
+    url(r'^',include(users.urls)),
+
+    #qq登录
+    url(r'^oauth',include(oauth.urls))
 
 ]

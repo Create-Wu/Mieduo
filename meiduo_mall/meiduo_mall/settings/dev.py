@@ -45,7 +45,8 @@ INSTALLED_APPS = [
     'rest_framework',  # DRF
     'users.apps.UsersConfig', # 用户
     'verifications.apps.VerificationsConfig', #短信验证码
-    'corsheaders',
+    'corsheaders', # 异步处理
+    'oauth.apps.OauthConfig',
 
 ]
 #允许哪些域名访问Django
@@ -231,4 +232,16 @@ CORS_ALLOW_CREDENTIALS = True  # 允许携带cookie
 
 JWT_AUTH = {
     'JWT_EXPIRATION_DELTA': datetime.timedelta(days=1),
+    'JWT_REPONSER_PAYLOAO_HANDLER':'user.utils.jwt_response_paload_handler',
+
 }
+
+#  告知DJANGO使用我们自定义的认证后端
+AUTHENTICATION_BACKENDS = [
+    'users.utils.UsernameMobileAuthBackend',
+]
+
+
+QQ_CLIENT_ID = '101474184'
+QQ_CLIENT_SECRET = 'c6ce949e04e12ecc909ae6a8b09b637c'
+QQ_REDIRECT_URI = 'http://www.meiduo.site:8080/oauth_callback.html'

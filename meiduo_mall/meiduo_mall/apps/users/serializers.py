@@ -3,6 +3,9 @@ import re
 from django_redis import get_redis_connection
 from rest_framework_jwt.serializers import User
 from rest_framework_jwt.serializers import api_settings
+
+
+
 class CreateUserSerializer(serializers.ModelSerializer):
     """
     创建序列化器
@@ -37,6 +40,7 @@ class CreateUserSerializer(serializers.ModelSerializer):
 
         }
 
+    #  validate ：校验方法： 下划线后面写字段，说明对单个字段验证
     def validate_mobile(self, mobile):
         """验证手机号码"""
 
@@ -86,11 +90,10 @@ class CreateUserSerializer(serializers.ModelSerializer):
         user = User.objects.create(**validated_date)
 
         # 调用django的认证系统加密密码
-
         user.set_password(validated_date['password'])
         user.save()
 
-        # 补充生成记录登录状态的token
+        # 补充生成记录登录状态的token（固定写法）
         jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
         jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
         payload = jwt_payload_handler(user)
@@ -98,3 +101,11 @@ class CreateUserSerializer(serializers.ModelSerializer):
         user.token = token
 
         return user
+
+
+class UserDetailSerializer(serializers.ModelSerializer):
+    """用户信息序列化器"""
+
+    class Meta:
+        mobile = User
+        fiedls = ['username','mobile','id','email','email_atcive']
