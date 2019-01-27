@@ -3,12 +3,13 @@ import re
 from django_redis import get_redis_connection
 from rest_framework_jwt.serializers import User
 from rest_framework_jwt.serializers import api_settings
-
+from celery_tasks.email.tasks import send_verify_email
+from users.models import Address
 
 
 class CreateUserSerializer(serializers.ModelSerializer):
     """
-    创建序列化器
+    创建注册序列化器
     """
     password2 = serializers.CharField(label='确认密码', write_only=True)
     sms_code = serializers.CharField(label='验证码', write_only=True)
@@ -107,5 +108,81 @@ class UserDetailSerializer(serializers.ModelSerializer):
     """用户信息序列化器"""
 
     class Meta:
-        mobile = User
-        fiedls = ['username','mobile','id','email','email_atcive']
+        model = User
+        fields = ['username','mobile','id','email','email_active']
+
+
+class EmailSerializer(serializers.ModelSerializer):
+    """邮箱序列化器"""
+
+    class Meta:
+        model = User
+        fields = ('id', 'email')
+        extra_kwages = {
+
+            'email': {
+                'required': True
+            }
+        }
+
+    def update(self, instance, validated_data):
+        email = validated_data['email']  # 创建实例对象
+        instance.email = email
+        instance.save()
+
+
+        # 生成邮箱激活url
+        verify_url = instance.generate_verify_email_url()
+
+        # 在此地发送邮箱
+        send_verify_email.delay(email,verify_url)
+
+
+
+        return instance
+
+
+class UserAdderssSerialzier(serializers.ModelSerializer):
+    """用户地址序列化器"""
+
+    province = serializers.StringRelatedField(read_only=True)
+    city = serializers.StringRelatedField(read_only=True)
+    district = serializers.StringRelatedField(read_only=True)
+    province_id = serializers.IntegerField(label='省ID',required=True)
+    city_id = serializers.IntegerField(label='市ID',required=True)
+    district_id =serializers.IntegerField(label ='区ID',required=True)
+
+
+
+    class Meta:
+        model = Address
+        # exclude： 排除
+        exclude =('user','is_deleted','create_time','update_time')
+
+    def validate_mobel(self,value):
+        """
+        验证手机号
+        :param value:
+        :return:
+        """
+        if not re.match(r'^1[3-9]\d{9}$',value):
+            raise serializers.ValidationError('手机格式错误')
+
+        return value
+
+
+    def create(self,validated_data):
+        """保存"""
+
+        validated_data['user'] = self.context['request'].user
+        return super().create(validated_data)
+
+
+
+
+class  AddressTitleSerializer(serializers.ModelSerializer):
+    """地址标题"""
+
+    class Meta:
+        model = Address
+        fields = ('title')
