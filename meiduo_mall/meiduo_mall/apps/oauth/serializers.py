@@ -52,7 +52,8 @@ class QQAuthUserSerializer(serializers.Serializer):
         """创建用户"""
         # 获取检验用户
         user = validated_data.get('user')
-
+        #向视图对象中补充user对象属性，以便在视图中使用user
+        self.context['view'].user = user
         if not user:
             user = User.objects.create_user(
                 username=validated_data['mobile'],

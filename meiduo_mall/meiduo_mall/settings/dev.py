@@ -46,8 +46,14 @@ INSTALLED_APPS = [
     'users.apps.UsersConfig', # 用户
     'verifications.apps.VerificationsConfig', #短信验证码
     'corsheaders', # 异步处理
-    'oauth.apps.OauthConfig',
-
+    'oauth.apps.OauthConfig',  # qq登录
+    'areas.apps.AreasConfig',  # 三级联动地址
+    'goods.apps.GoodsConfig',  #  商品数据
+    'contents.apps.ContentsConfig', # 广告内容
+    'ckeditor', # 富文本编辑器
+    'ckeditor_uploader', #富文本编辑器上传图片模块
+    'django_crontab', # 静态页面定时器
+    'carts.apps.CartsConfig', # 购物车
 ]
 #允许哪些域名访问Django
 
@@ -73,7 +79,7 @@ ROOT_URLCONF = 'meiduo_mall.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR,'templates')],  # 模板目录
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -125,6 +131,9 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'zh-hans'
 
+# 解决crontab定时器中文问题
+CRONTAB_COMMAND_PREFIX = 'LANG_ALL=zh_cn.UTF-8'
+
 TIME_ZONE = 'Asia/Shanghai'
 
 USE_I18N = True
@@ -153,6 +162,22 @@ CACHES = {
                 "LOCATION": "redis://127.0.0.1:6379/2",
                 "OPTIONS": {"CLIENT_CLASS": "django_redis.client.DefaultClient", }
                 },
+    #浏览商品历史
+    "history": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/3",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    },
+    # 购物车
+    "cart": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/4",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    },
 }
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 SESSION_CACHE_ALIAS = "session"
@@ -209,9 +234,23 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.BasicAuthentication',
     ),
+    # 商品分页
+    'DEFAULT_PAGINATION_CLASS': 'meiduo_mall.utils.pagination.StandardResultsSetPagination',
 
 
 }
+
+# Django rest_framework 中的缓存 ：drf-extensions
+# 配置默认参数
+REST_FRAMEWORK_EXTENSIONS = {
+    # 缓存时间
+    'DEFAULT_CACHE_RESPONSE_TIMEOUT': 60 * 60,
+    # 缓存存储
+    'DEFAULT_USE_CACHE': 'default', }
+
+
+
+
 
 # 告知Django认证系统使用我们自定义的模型类。
 AUTH_USER_MODEL = 'users.User'
@@ -229,7 +268,7 @@ CORS_ORIGIN_WHITELIST = (
 CORS_ALLOW_CREDENTIALS = True  # 允许携带cookie
 
 
-
+# JWT状态保持
 JWT_AUTH = {
     'JWT_EXPIRATION_DELTA': datetime.timedelta(days=1),
     'JWT_REPONSER_PAYLOAO_HANDLER':'user.utils.jwt_response_paload_handler',
@@ -241,7 +280,48 @@ AUTHENTICATION_BACKENDS = [
     'users.utils.UsernameMobileAuthBackend',
 ]
 
-
+# QQ登录所需基本信息
 QQ_CLIENT_ID = '101474184'
 QQ_CLIENT_SECRET = 'c6ce949e04e12ecc909ae6a8b09b637c'
 QQ_REDIRECT_URI = 'http://www.meiduo.site:8080/oauth_callback.html'
+
+
+#邮箱认证
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.163.com'
+EMAIL_PORT = 25
+#发送邮件的邮箱
+EMAIL_HOST_USER = 'itcast99@163.com'
+#在邮箱中设置的客户端授权密码
+EMAIL_HOST_PASSWORD = 'python99'
+#收件人看到的发件人
+EMAIL_FROM = 'python<itcast99@163.com>'
+
+#django 文件存储
+DEFAULT_FILE_STORAGE = 'meiduo_mall.utils.fastdfs.fdfs_storage.FastDFSStorage'
+
+# FastDFS 文件存储系统
+FDFS_URL = 'http://image.meiduo.site:8888/'
+FDFS_CLIENT_CONF = os.path.join(BASE_DIR, 'utils/fastdfs/client.conf')
+
+
+# 富文本编辑器ckeditor配置
+CKEDITOR_CONFIGS = {
+    'default': {
+        'toolbar': 'full',  # 工具条功能
+        'height': 300,  # 编辑器高度
+        # 'width': 300,  # 编辑器宽
+    },
+}
+CKEDITOR_UPLOAD_PATH = ''  # 上传图片保存路径，使用了FastDFS，所以此处设为''
+
+
+# 生成的静态html文件保存目录
+GENERATED_STATIC_HTML_FILES_DIR = os.path.join(os.path.dirname(os.path.dirname(BASE_DIR)), 'front_end_pc')
+
+
+# 定时任务
+CRONJOBS = [
+    # 每5分钟执行一次生成主页静态文件
+    ('*/5 * * * *', 'contents.crons.generate_static_index_html', '>> /Users/delron/Desktop/meiduo_mall/logs/crontab.log')
+]

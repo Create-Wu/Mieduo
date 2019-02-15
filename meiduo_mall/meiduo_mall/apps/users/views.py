@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from django_redis import get_redis_connection
 from rest_framework import serializers, status, mixins
 from rest_framework.decorators import action
 from rest_framework.generics import CreateAPIView, RetrieveAPIView, UpdateAPIView
@@ -6,19 +7,41 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet
+from rest_framework_jwt.views import ObtainJSONWebToken
 
+from carts.utils import merge_cart_cookie_to_redis
+from goods.models import SKU
+from goods.serializer import SKUSerializer
 from users import constants
 from users.models import User
 from users.serializers import CreateUserSerializer, UserDetailSerializer, EmailSerializer, UserAdderssSerialzier, \
-    AddressTitleSerializer
+    AddressTitleSerializer, AddUserBrowsingHistorySerializer
 
 
 # Create your views here.
 
 
+
+class UserAuthorizeView(ObtainJSONWebToken):
+    """
+    用户登录，认证(重写账号密码登录视图)
+    """
+    def post(self, request, *args, **kwargs):
+        # 调用父类的方法，获取drf jwt扩展默认的认证用户处理结果
+        response = super(UserAuthorizeView,self).post(request, *args, **kwargs)
+
+        # 仿照drf jwt扩展对于用户登录的认证方式，判断用户是否认证登录成功
+        # 如果用户登录认证成功，则合并购物车
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.object.get('user') or request.user
+            merge_cart_cookie_to_redis(request, user, response)
+
+        return response
+
+
+
 # 用户注册
-
-
 class UserView(CreateAPIView):
     """
       用户注册，调用序列化器
@@ -188,3 +211,27 @@ class AddressViewSet(mixins.CreateModelMixin,mixins.UpdateModelMixin, GenericVie
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)
+
+class UserBrowsingHistoryView(CreateAPIView):
+    """
+    用户浏览历史记录
+    """
+    serializer_class = AddUserBrowsingHistorySerializer
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        """
+        获取
+        """
+        user_id = request.user.id
+
+        redis_conn = get_redis_connection("history")
+        history = redis_conn.lrange("history_%s" % user_id, 0, constants.USER_BROWSING_HISTORY_COUNTS_LIMIT - 1)
+        skus = []
+        # 为了保持查询出的顺序与用户的浏览历史保存顺序一致
+        for sku_id in history:
+            sku = SKU.objects.get(id=sku_id)
+            skus.append(sku)
+
+        s = SKUSerializer(skus, many=True)
+        return Response(s.data)

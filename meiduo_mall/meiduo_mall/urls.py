@@ -15,11 +15,18 @@ Including another URLconf
 """
 from django.conf.urls import url, include
 from django.contrib import admin
+
+import carts.urls
+import goods.urls
 import verifications.urls
 import users.urls
 import oauth.urls
+import areas.urls
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
+
+    #富文本编辑界面
+    url(r'^ckeditor/', include('ckeditor_uploader.urls')),
 
     # 验证码路由
     url(r'^', include(verifications.urls)),
@@ -28,6 +35,14 @@ urlpatterns = [
     url(r'^',include(users.urls)),
 
     #qq登录
-    url(r'^oauth',include(oauth.urls))
+    url(r'^oauth',include(oauth.urls)),
+
+    #用户地址
+    url(r'^',include(areas.urls)),
+
+    #商品列表
+    url(r'^',include(goods.urls)),
+    #购物车
+    url(r'^',include(carts.urls)),
 
 ]
