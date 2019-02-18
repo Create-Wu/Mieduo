@@ -1,7 +1,7 @@
 from ckeditor.fields import RichTextField
 from ckeditor_uploader.fields import RichTextUploadingField
 from django.db import models
-from meiduo_mall.utils.mobile import BaseModel
+from meiduo_mall.utils.models import BaseModel
 
 # Create your models here.
 

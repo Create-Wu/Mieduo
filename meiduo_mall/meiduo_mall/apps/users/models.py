@@ -7,7 +7,7 @@ from itsdangerous import BadData
 # Create your models here.
 from itsdangerous import Serializer
 
-from meiduo_mall.utils.mobile import BaseModel
+from meiduo_mall.utils.models import BaseModel
 
 
 # 邮箱验证模型

@@ -15,7 +15,7 @@ Including another URLconf
 """
 from django.conf.urls import url, include
 from django.contrib import admin
-
+import orders.urls
 import carts.urls
 import goods.urls
 import verifications.urls
@@ -44,5 +44,7 @@ urlpatterns = [
     url(r'^',include(goods.urls)),
     #购物车
     url(r'^',include(carts.urls)),
+    #订单
+    url(r'^',include(orders.urls)),
 
 ]

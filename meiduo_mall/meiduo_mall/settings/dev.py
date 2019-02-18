@@ -42,18 +42,22 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'rest_framework',  # DRF
-    'users.apps.UsersConfig', # 用户
-    'verifications.apps.VerificationsConfig', #短信验证码
-    'corsheaders', # 异步处理
+
+    'users.apps.UsersConfig',  # 用户
+    'verifications.apps.VerificationsConfig',  # 短信验证码
     'oauth.apps.OauthConfig',  # qq登录
     'areas.apps.AreasConfig',  # 三级联动地址
-    'goods.apps.GoodsConfig',  #  商品数据
-    'contents.apps.ContentsConfig', # 广告内容
+    'goods.apps.GoodsConfig',  # 商品数据
+    'contents.apps.ContentsConfig',  # 广告内容
+    'carts.apps.CartsConfig', # 购物车
+    'orders.apps.OrdersConfig', # 订单
+
+    'rest_framework',  # DRF
+    'corsheaders', # 异步处理
     'ckeditor', # 富文本编辑器
     'ckeditor_uploader', #富文本编辑器上传图片模块
     'django_crontab', # 静态页面定时器
-    'carts.apps.CartsConfig', # 购物车
+
 ]
 #允许哪些域名访问Django
 

@@ -1,7 +1,7 @@
 from django.db import models
 
 # Create your models here.
-from meiduo_mall.utils.mobile import BaseModel
+from meiduo_mall.utils.models import BaseModel
 from users.models import User
 
 
